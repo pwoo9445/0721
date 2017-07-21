@@ -36,6 +36,7 @@ track.lamp_nr_seg = 3;
 
 % MERGING SETTING
 selfishness = 0.7; % selfishness of othercar
+acc = 500; % acceleration (if othercar is selfish)
 
 %============================================================
 
@@ -200,6 +201,7 @@ while sim.flag && ishandle(fig)
                   [othercars, dec] = update_othercars_mycar_intelligent_merge(othercars, sim, track, mycar, car_nr); % added by yanagihara
               else
                   othercars  = update_othercars_intelligent_merge(othercars, sim, track); %added by yanagihara
+                  othercars.car{car_nr}.vel(1) = othercars.car{car_nr}.vel(1) + acc;
               end
 
             else
