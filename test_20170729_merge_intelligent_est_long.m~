@@ -249,13 +249,11 @@ while sim.flag && ishandle(fig)
                 % 現車線に復帰
                 if FLAG_LANECHANGE_JUDGE == 5
                     % 現車線に戻るベジエ曲線を作成
-                    dx = 2000; % x-cood.interval of control points for bezier curve
-                    dy = LANE_WIDTH/2 - mycar.pos(2);
-                    ctlPt = [0 0; dx 0; 2*dx dy; 3*dx dy];
+                    dx = 15000/3; % x-cood.interval of control points for bezier curve
+                    ctlPt = [0 0; dx 0; 2*dx -LANE_WIDTH; 3*dx -LANE_WIDTH];
                     [laneChangePath, lengthP] = bezierCurve(ctlPt);
-                    ratioSpeed = lengthP/15000*1.1;
                     laneChangePathTranslated = update_laneChangePath(mycar,laneChangePath);
-                    mycar = update_control_mycar(mycar, sim, othercars,laneChangePathTranslated,ratioSpeed);
+                    mycar = update_control_mycar(mycar, sim, othercars,pathTranslated,ratioSpeed);
                 end
                 
                 % 車線変更の可否決定
