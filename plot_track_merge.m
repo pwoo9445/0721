@@ -108,9 +108,9 @@ if first_flag
         text_pos = curr_pos(1:2) + textoffset*[cos(curr_pos(3)*pi/180) sin(curr_pos(3)*pi/180)];
     end
     
-    h.mergeline1 = plot([0 90000], [5250 5250], 'r-', 'LineWidth', 4);
-    h.mergeline2 = plot([90000 100000], [5250 1750], 'r-', 'LineWidth', 4);
-    h.mergeline3 = plot([0 10000 * track.lamp_nr_seg], [1750 1750], 'r-', 'LineWidth', 4);
+    h.mergeline1 = plot([0 90000], [3500+1750*(track.nr_lane - 2) 3500+1750*(track.nr_lane - 2)], 'r-', 'LineWidth', 4);
+    h.mergeline2 = plot([90000 100000], [3500+1750*(track.nr_lane - 2) 1750*(track.nr_lane - 2)], 'r-', 'LineWidth', 4);
+    h.mergeline3 = plot([0 10000 * track.lamp_nr_seg], [1750*(track.nr_lane - 2) 1750*(track.nr_lane - 2)], 'r-', 'LineWidth', 4);
     
     % START LANE
     startp1 = track.seg{1}.p(1, :);

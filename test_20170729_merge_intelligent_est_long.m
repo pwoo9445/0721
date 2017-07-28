@@ -8,7 +8,7 @@ selfishmode = 1; % 0:random 1:manual(list)
 i_list = 1;
 selfishlist = {0, 0, 1}; % 0:yuzuranai 1:yuzuru
 selfishness = 0.7; % selfishness of othercar
-acc_rear = 300; % acceleration (if othercar is selfish)
+acc_rear = 100; % acceleration (if othercar is selfish)
 gap_front_nr = 2;
 gap_rear_nr = 1;
 acc_mycar = 300; %acceleration of mycar before lanechanging (according to the selected gap)
@@ -28,7 +28,7 @@ a = 4000; % maximum acceleration
 b = 6000; %desired deceleration
 delta = 4; %acceleration exponent
 s0 = 5000; % minimum distance
-l = 2500; % vehicle length
+l = 5000; % vehicle length
 
 
 % INITIALIZE ENVIRONMENT
@@ -70,6 +70,7 @@ track.lamp_nr_seg = 3;
 % sizeY = length(y_grid);
 %---------------------------------
 
+i = 0;
 % flagPlot = true;
 
 % RUN
@@ -200,7 +201,7 @@ while sim.flag && ishandle(fig)
                     mycar = update_control_mycar_intelligent(mycar, sim, othercars,laneChangePathTranslated,ratioSpeed, track, gap_front_nr);
                 end
                 
-                if FLAG_LANECHANGE_JUDGE == 1 && FLAG_JUDGEMENT_TYPE == 1
+                if (FLAG_LANECHANGE_JUDGE == 1 || FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 3) && FLAG_JUDGEMENT_TYPE == 1
                     A1 = othercars.car{gap_rear_nr}.vel(1)/v0;
                     
                     % 前走車へIDMに従って追従した時の加速度を計算
@@ -229,9 +230,21 @@ while sim.flag && ishandle(fig)
                     [othercars, dec] = update_othercars_mycar_intelligent_merge(othercars, sim, track, mycar, gap_rear_nr);
                 else
                     othercars  = update_othercars_intelligent_merge(othercars, sim, track);
-                    %othercars.car{gap_rear_nr}.vel(1) = othercars.car{gap_rear_nr}.vel(1) + acc_rear;
+                    othercars.car{gap_rear_nr}.vel(1) = othercars.car{gap_rear_nr}.vel(1) + acc_rear;
                 end
                 
+                if FLAG_JUDGEMENT_TYPE == 1 && (FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 3)
+                    
+                    i = i + 1;
+                    vel_rear_en = othercars.car{gap_rear_nr}.vel(1); % 加速度算出のための速度計測
+                    if abs((vel_rear_en - vel_rear_st)/sim.T - acc_frontcar) < abs((vel_rear_en - vel_rear_st)/sim.T - acc_mycar)
+                        fprintf(2, 'following FRONTCAR\n');
+                    else
+                        fprintf(2, 'following MYCAR\n');
+                    end
+                    fprintf(1, 'acceleration(actual) = [%.4d]\n', (vel_rear_en - vel_rear_st)/sim.T);
+                    fprintf(2, '[%d]\n', i);
+                end
                 
                 % 車線変更の可否決定
                 if FLAG_LANECHANGE_JUDGE == 1

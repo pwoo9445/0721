@@ -1,12 +1,12 @@
 function [mycar, dec_me] = update_control_mycar_intelligent(mycar, sim, othercars,pathTranslated,ratioSpeed, track, front_num)
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
-v0 = 30000; % desired velocity
+v0 = 10000; % desired velocity
 T = 1.0; % Safe time headway
 a = 4000; % maximum acceleration
 b = 6000; %desired deceleration
 delta = 4; %acceleration exponent
-s0 = 1000; % minimum distance
+s0 = 3000; % minimum distance
 l = 2500; % vehicle length
 %============================================================
 
