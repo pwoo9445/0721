@@ -5,6 +5,9 @@ persistent first_flag h
 if isempty(first_flag)
     first_flag = true;
 end
+
+PLOT_ARROW = 0;
+
 iclk = clock;
 % PLOT FUTURE POSITINOS
 pred_hor = 3;
@@ -46,9 +49,11 @@ if first_flag
     if PLOT_FUTURE_CARPOSES
         for i = 1:pred_hor
             futurecarcol = [0.95 0.3 0.3];
-            [h1, h2, h3] = plot_arrow(car_traj(i, 1:2), 1500, car_traj(i, 3) ...
-                , futurecarcol, 2);
-            h.cartraj{i} = [h1 h2 h3];
+            if PLOT_ARROW == 1
+                [h1, h2, h3] = plot_arrow(car_traj(i, 1:2), 1500, car_traj(i, 3) ...
+                    , futurecarcol, 2);
+                h.cartraj{i} = [h1 h2 h3];
+            end
             h.cartrajbd{i} = plot(car_trajbd{i}(:, 1), car_trajbd{i}(:, 2) ...
                 , 'Color', futurecarcol, 'LineWidth', 1);
         end
@@ -76,8 +81,10 @@ if first_flag
     if SIMPLECARSHAPE
         h.carfill = fill(mycar.bd(:, 1), mycar.bd(:, 2), 'g');
         h.carbd = plot(mycar.bd(:, 1), mycar.bd(:, 2), 'k', 'LineWidth', 1);
-        [h1, h2, h3] = plot_arrow(mycar.pos, 2000, mycar.pos(3), 'k', 3);
-        h.cararrow = [h1 h2 h3];
+        if PLOT_ARROW == 1
+            [h1, h2, h3] = plot_arrow(mycar.pos, 2000, mycar.pos(3), 'k', 3);
+            h.cararrow = [h1 h2 h3];
+        end
     end
     % CAR IMAGE (PLOT ALWAYS)
     if 0   % mod by kumano
@@ -126,10 +133,12 @@ else
     if SIMPLECARSHAPE
         h.carfill.Vertices = mycar.bd;
         h.carbd.XData = mycar.bd(:, 1); h.carbd.YData = mycar.bd(:, 2);
-        [x1, y1, x2, y2, x3, y3] = get_arrow(mycar.pos, 2000, mycar.pos(3), 'k', 3);
-        h.cararrow(1).XData = x1; h.cararrow(1).YData = y1;
-        h.cararrow(2).XData = x2; h.cararrow(2).YData = y2;
-        h.cararrow(3).XData = x3; h.cararrow(3).YData = y3;
+        if PLOT_ARROW == 1
+            [x1, y1, x2, y2, x3, y3] = get_arrow(mycar.pos, 2000, mycar.pos(3), 'k', 3);
+            h.cararrow(1).XData = x1; h.cararrow(1).YData = y1;
+            h.cararrow(2).XData = x2; h.cararrow(2).YData = y2;
+            h.cararrow(3).XData = x3; h.cararrow(3).YData = y3;
+        end
     end
     % CAR IMAGE (PLOT ALWAYS)
     if 1

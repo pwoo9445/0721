@@ -146,7 +146,7 @@ while sim.flag && ishandle(fig)
             while mycar_est.pos(2) > -1700
                 i_est = i_est + 1;
                 [othercars_est, dec]  = update_rearcar_mycar_intelligent(othercars_est, sim, track, mycar_est, car_nr);
-                [mycar_est, U_rt, U_ft] = update_control_mycar_est(mycar_est, sim, othercars_est,laneChangePathTranslated,ratioSpeed, car_nr, front_num);
+                mycar_est = update_control_mycar_est(mycar_est, sim, othercars_est,laneChangePathTranslated,ratioSpeed);
                 if dec > dec_max
                   dec_max = dec;
                 end

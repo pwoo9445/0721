@@ -1,4 +1,4 @@
-function othercars = test_addcars_multilane(othercars, track, nr_cars, NR_LANE)
+function othercars = test_addcars_multilane(othercars, track, nr_cars, NR_LANE, vel)
 % ADD CARS IN RANDOM POSTIONS
 VERBOSE = 0;
 
@@ -25,21 +25,23 @@ for posidx = carposlist
 end
 %}
 
-for carid = 1:nr_cars
-    if carid <= track.nr_seg
-       laneidx= 2;
+for laneidx = 2:NR_LANE
+    for carid = 1:nr_cars
+        %     if carid <= track.nr_seg
+        %        laneidx= 2;
+        %     end
+        %     if carid > track.nr_seg
+        %        laneidx= 3;
+        %     end
+        segidx = mod(carid-1,track.nr_seg)+1;
+        seglen = track.seg{segidx}.d;
+        randoffset = seglen*rand*0.5;
+        %randoffset = seglen*0.5;
+        carpos = get_posintrack(track, segidx, randoffset, laneidx, 0);
+        %    othercars = add_othercars(othercars, carpos, [15000 0], 'normal');
+        othercars = add_othercars(othercars, carpos, [vel 0], 'normal'); % 10000 mm/s = 36 km/h
+        %othercars = add_othercars(othercars, carpos, [0 0], 'stop');
     end
-    if carid > track.nr_seg
-       laneidx= 3;
-    end
-    segidx = mod(carid-1,track.nr_seg)+1;
-    seglen = track.seg{segidx}.d;
-    randoffset = seglen*rand*0.5;
-    %randoffset = seglen*0.5;
-    carpos = get_posintrack(track, segidx, randoffset, laneidx, 0);
-%    othercars = add_othercars(othercars, carpos, [15000 0], 'normal');
-    othercars = add_othercars(othercars, carpos, [10000 0], 'normal'); % 10000 mm/s = 36 km/h
-    %othercars = add_othercars(othercars, carpos, [0 0], 'stop');
 end
 
 % 残り1台の処理

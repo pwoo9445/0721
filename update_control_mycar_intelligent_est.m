@@ -30,22 +30,22 @@ targetDegree = get_tatgetTheta(pos,pathTranslated);
 mycar.vel(2) = mycar.vel(2) + (targetDegree - pos(3))/sim.T; 
 %----------------------------------------------
 
-if car_nr > 2
-    A1 = othercars.car{front_num}.vel(1)/v0;
-    
-    if othercars.car{front_num}.pos(1) - mycar.pos(1) < 0 % if there is no other car front of this car
-        A3 = track.xmax - mycar.pos(1) + othercars.car{front_num}.pos(1) - l;
-    else
-        A3 = othercars.car{front_num}.pos(1) - mycar.pos(1) - l;
-    end
-    A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{front_num}.vel(1))/2/sqrt(a*b))/A3;
-    
-    mycar.vel(1) = mycar.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
-    
-    if mycar.vel(1) < 0
-        mycar.vel(1) = 0;
-    end
+
+A1 = othercars.car{front_num}.vel(1)/v0;
+
+if othercars.car{front_num}.pos(1) - mycar.pos(1) < 0 % if there is no other car front of this car
+    A3 = track.xmax - mycar.pos(1) + othercars.car{front_num}.pos(1) - l;
+else
+    A3 = othercars.car{front_num}.pos(1) - mycar.pos(1) - l;
 end
+A2 = (s0 + mycar.vel(1)*T + mycar.vel(1) * (mycar.vel(1) - othercars.car{front_num}.vel(1))/2/sqrt(a*b))/A3;
+
+mycar.vel(1) = mycar.vel(1) + a*(1 - A1^delta - A2^2)*sim.T;
+
+if mycar.vel(1) < 0
+    mycar.vel(1) = 0;
+end
+
 
 mycar.pos = update_pos(mycar.pos, mycar.vel, sim.T);
 mycar.bd  = get_carshape(mycar.pos, mycar.W, mycar.H);
@@ -61,10 +61,10 @@ mycar = update_rfs(mycar, othercars);
 % %---------------------------------
 
 %--- 動特性ポテンシャルの定数 by Yanagihara--------
-kappa = 5.0;
-alpha = 200000000000;
-beta  = 1.0;
-sigma = 500;
+% kappa = 5.0;
+% alpha = 200000000000;
+% beta  = 1.0;
+% sigma = 500;
 %---------------------------------
 
 % %---othercar（後方）の動特性ポテンシャル計算（１点のみ）by Yanagihara-----------

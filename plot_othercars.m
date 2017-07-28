@@ -4,6 +4,8 @@ if isempty(fist_flag)
     fist_flag = true;
 end
 
+PLOT_ARROW = 0;
+
 iclk = clock;
 
 % MY CAR GRID
@@ -38,9 +40,11 @@ if fist_flag
             h.carsfill{i} = fill(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2), col);
             h.carsbd{i} = plot(othercars.car{i}.bd(:, 1), othercars.car{i}.bd(:, 2) ...
                 , 'Color', 'k', 'LineWidth', 1);
-            [h1, h2, h3] = plot_arrow(othercars.car{i}.pos(1:2) ...
-                , 2000, othercars.car{i}.pos(3), 'w', 3);
-            h.carsarrow{i} = [h1 h2 h3];
+            if PLOT_ARROW == 1
+                [h1, h2, h3] = plot_arrow(othercars.car{i}.pos(1:2) ...
+                    , 2000, othercars.car{i}.pos(3), 'w', 3);
+                h.carsarrow{i} = [h1 h2 h3];
+            end
         end
         if REALCARSHAPE
             carpos = othercars.car{i}.pos;
@@ -61,11 +65,13 @@ else
             h.carsfill{i}.Vertices = othercars.car{i}.bd;
             h.carsbd{i}.XData = othercars.car{i}.bd(:, 1);
             h.carsbd{i}.YData = othercars.car{i}.bd(:, 2);
-            [x1, y1, x2, y2, x3, y3] = get_arrow(othercars.car{i}.pos, 2000 ...
-                , othercars.car{i}.pos(3), 'k', 3);
-            h.carsarrow{i}(1).XData = x1; h.carsarrow{i}(1).YData = y1;
-            h.carsarrow{i}(2).XData = x2; h.carsarrow{i}(2).YData = y2;
-            h.carsarrow{i}(3).XData = x3; h.carsarrow{i}(3).YData = y3;
+            if PLOT_ARROW == 1
+                [x1, y1, x2, y2, x3, y3] = get_arrow(othercars.car{i}.pos, 2000 ...
+                    , othercars.car{i}.pos(3), 'k', 3);
+                h.carsarrow{i}(1).XData = x1; h.carsarrow{i}(1).YData = y1;
+                h.carsarrow{i}(2).XData = x2; h.carsarrow{i}(2).YData = y2;
+                h.carsarrow{i}(3).XData = x3; h.carsarrow{i}(3).YData = y3;
+            end
         end
         if REALCARSHAPE
             carpos = othercars.car{i}.pos;

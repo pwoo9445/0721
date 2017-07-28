@@ -9,4 +9,4 @@ function othercars = update_othercar_est(othercars, sim, car_nr)
 % end
 
 othercars.car{car_nr}.pos ...
-         = update_pos(othercars.car{car_nr}.pos, othercars.car{car_nr}.vel, sim.T); 
+         = update_pos(othercars.car{car_nr}.pos, othercars.car{car_nr}.vel, sim.T);
