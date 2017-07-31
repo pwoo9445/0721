@@ -14,13 +14,10 @@ end
 %---- Control angular velocity: vel(2) --------
 pos = predict_pos(mycar.pos, mycar.vel, sim.T);
 targetDegree = get_tatgetTheta(pos,pathTranslated);
-if targetDegree - pos(3) > 1
-    mycar.vel(2) = mycar.vel(2) + 1/sim.T;
-elseif targetDegree - pos(3) < -1
-    mycar.vel(2) = mycar.vel(2) - 1/sim.T;
-else
-    mycar.vel(2) = mycar.vel(2) + (targetDegree - pos(3))/sim.T;
-end
+if targetDegree - pos(3) > 10
+    mycar.vel(2) = mycar.vel(2) + 10/sim.T;
+elseif target
+mycar.vel(2) = mycar.vel(2) + (targetDegree - pos(3))/sim.T;
 %----------------------------------------------
 
 fprintf(1, 'mycar.pos(3) = [%4d] targetDegree = [%4d] mycar.vel(2) = [%4d] (targetDegree - pos(3))/sim.T = [%4d]\n', mycar.pos(3), targetDegree, mycar.vel(2), (targetDegree - pos(3))/sim.T);

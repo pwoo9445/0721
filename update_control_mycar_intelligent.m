@@ -28,6 +28,8 @@ targetDegree = get_tatgetTheta(pos,pathTranslated);
 mycar.vel(2) = mycar.vel(2) + (targetDegree - pos(3))/sim.T;
 %----------------------------------------------
 
+fprintf(1, 'mycar.pos(3) = [%4d] targetDegree = [%4d] mycar.vel(2) = [%4d] (targetDegree - pos(3))/sim.T = [%4d]\n', mycar.pos(3), targetDegree, mycar.vel(2), (targetDegree - pos(3))/sim.T);
+
 
 A1 = othercars.car{front_num}.vel(1)/v0;
 
