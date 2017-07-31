@@ -6,7 +6,7 @@ ccc;
 % MERGING SETTING
 selfishmode = 1; % 0:random 1:manual(list)
 i_list = 1;
-selfishlist = {0, 0, 0}; % 0:yuzuranai 1:yuzuru
+selfishlist = {0, 1, 0, 0, 0, 1, 0, 0, 1}; % 0:yuzuranai 1:yuzuru
 selfishness = 0.7; % selfishness of othercar
 acc_rear = 100; % acceleration (if othercar is selfish)
 gap_front_nr = 2;
@@ -61,8 +61,8 @@ ratioSpeed = lengthP/15000*1.1;
 track.lamp_nr_seg = 3;
 
 % GUIGUI LEVEL SETTING
-gui_ego = 2.0; % time length of lanechanging
-gui_rear = {3000, 3000, 10000}; % acceptable distance of rearcar
+gui_ego = 1.0; % time length of lanechanging
+gui_rear = {3000, 3000, 3000, 10000, 3000, 3000, 3000, 3000, 3000}; % acceptable distance of rearcar
 
 
 %--- グリ�?��の設�?by Yanagihara---------------
@@ -148,13 +148,13 @@ while sim.flag && ishandle(fig)
             FLAG_LANECHANGE_JUDGE = 0; % (0:not yet, 1:go to judge, 2:judge refused, 3:judge preparing, 4:judge cleared, 5:returning)
             FLAG_LANECHANGE_STOP = 0;
             
-            if (selfishmode == 0 && rand > selfishness) || (selfishmode == 1 && selfishlist{i_list} == 1)
-                FLAG_REARCAR_YUZURU = 1;
-                fprintf(1, 'REARCAR:YUZURU \n');
-            else
-                FLAG_REARCAR_YUZURU = 0;
-                fprintf(1, 'REARCAR:YUZURANAI \n');
-            end
+%             if (selfishmode == 0 && rand > selfishness) || (selfishmode == 1 && selfishlist{i_list} == 1)
+%                 FLAG_REARCAR_YUZURU = 1;
+%                 fprintf(1, 'REARCAR:YUZURU \n');
+%             else
+%                 FLAG_REARCAR_YUZURU = 0;
+%                 fprintf(1, 'REARCAR:YUZURANAI \n');
+%             end
             
         case 'z'
             % decelerate othercar for Intelligent Driving Model
@@ -190,11 +190,11 @@ while sim.flag && ishandle(fig)
                     ransu = rand;
                     fprintf(1, 'RANSU = [%d] \n', ransu);
                     if (selfishmode == 0 && ransu > selfishness) || (selfishmode == 1 && selfishlist{i_list})
-                        FLAG_REARCAR_YUZURU = 1;
-                        fprintf(1, 'REARCAR:YUZURU \n');
+%                         FLAG_REARCAR_YUZURU = 1;
+%                         fprintf(1, 'REARCAR:YUZURU \n');
                     else
-                        FLAG_REARCAR_YUZURU = 0;
-                        fprintf(1, 'REARCAR:YUZURANAI \n');
+%                         FLAG_REARCAR_YUZURU = 0;
+%                         fprintf(1, 'REARCAR:YUZURANAI \n');
                     end
                     
                     FLAG_LANECHANGE_JUDGE = 3;
@@ -233,7 +233,7 @@ while sim.flag && ishandle(fig)
                 end
                 
                 % update othercars speed
-                if FLAG_REARCAR_YUZURU == 1
+                if selfishlist{gap_rear_nr} == 1
                     [othercars, dec] = update_othercars_mycar_intelligent_merge(othercars, sim, track, mycar, gap_rear_nr);
                 else
                     othercars  = update_othercars_intelligent_merge(othercars, sim, track);
@@ -242,9 +242,9 @@ while sim.flag && ishandle(fig)
                 
                 if FLAG_LANECHANGE_JUDGE == 2
                     if i_nego < gui_ego
-                        if sqrt((mycar.pos(1) - othercars.car{gap_rear_nr}.pos(1))^2 + (mycar.pos(2) - othercars.car{gap_rear_nr}.pos(2))^2) < gui_rear{i_list}
+                        if sqrt((mycar.pos(1) - othercars.car{gap_rear_nr}.pos(1))^2 + (mycar.pos(2) - othercars.car{gap_rear_nr}.pos(2))^2) < gui_rear{gap_rear_nr}
                             FLAG_LANECHANGE_JUDGE = 4;
-                            FLAG_REARCAR_YUZURU = 1;
+                            selfishlist{gap_rear_nr} = 1;
                         end
                         i_nego = i_nego + sim.T;
                         mycar = update_control_mycar_intelligent(mycar, sim, othercars,laneChangePathTranslated,ratioSpeed, track, gap_front_nr);
@@ -392,7 +392,7 @@ while sim.flag && ishandle(fig)
     axisinfo = plot_track_merge(track, FILL_LANES);
     plot_axisinfo(axisinfo);
     %plot_othercars(othercars, SIMPLECARSHAPE, REALCARSHAPE);
-    plot_othercars_gap(othercars, SIMPLECARSHAPE, REALCARSHAPE, gap_front_nr, gap_rear_nr);
+    plot_othercars_gap(othercars, SIMPLECARSHAPE, REALCARSHAPE, gap_front_nr, gap_rear_nr, selfishlist);
     plot_mycar(mycar, PLOT_FUTURE_CARPOSES, PLOT_CAR_PATHS, SIMPLECARSHAPE, PLOT_RFS);
     plot_turnSignal(mycar,sim);
     %plot_traj(traj);
@@ -401,7 +401,7 @@ while sim.flag && ishandle(fig)
         plot_laneChangePath(laneChangePathTranslated,FLAG_LANECHANGE); % add by kumano
     end
     %----
-    plot_title(titlestr, titlecol, titlefontsize);
+    % plot_title(titlestr, titlecol, titlefontsize);
     
     %---ポテンシャル場描画 by Yanagihara----------
     %     itvl= 0:2000:50000;

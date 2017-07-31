@@ -24,11 +24,11 @@ if fist_flag
     % OTHER CARS
     h.carsarrow = cell(othercars.n, 1);
     % for i = 1:othercars.n
-    for i = 1:othercars.npl
-        if selfishlist{i} == 1
+    for i = 1:othercars.MAX_NRCAR
+        if i == gap_front_nr || i == gap_rear_nr
             col = [0.2 0.2 0.9]; % blue
         else
-            col = [0.9 0.2 0.6]; % pink
+            col = [0.9 0.2 0.6]; % 
         end
         randpaths = othercars.car{i}.paths;
         npath = size(randpaths, 1)/3; 
