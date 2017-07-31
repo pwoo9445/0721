@@ -6,7 +6,7 @@ ccc;
 % MERGING SETTING
 selfishmode = 1; % 0:random 1:manual(list)
 i_list = 1;
-selfishlist = {0, 0, 1}; % 0:yuzuranai 1:yuzuru
+selfishlist = {0, 0, 0}; % 0:yuzuranai 1:yuzuru
 selfishness = 0.7; % selfishness of othercar
 acc_rear = 100; % acceleration (if othercar is selfish)
 gap_front_nr = 2;
@@ -16,7 +16,7 @@ dec_mycar = 300; %deceleration of mycar before lanechanging (according to the se
 
 
 % JUDGEMENT SETTING
-FLAG_JUDGEMENT_TYPE = 1; % 0:TTC, 1:intention estimation by acceleration
+% FLAG_JUDGEMENT_TYPE = 1; % 0:TTC, 1:intention estimation by acceleration
 
 % INITIAL VALUE OF OTHERCAR
 othercar_vel_ini = 5000;
@@ -60,8 +60,12 @@ ratioSpeed = lengthP/15000*1.1;
 % LAMP LANE SETTING
 track.lamp_nr_seg = 3;
 
+% GUIGUI LEVEL SETTING
+gui_ego = 2.0; % time length of lanechanging
+gui_rear = {3000, 3000, 10000}; % acceptable distance of rearcar
 
-%--- グリッドの設定 by Yanagihara---------------
+
+%--- グリ�?��の設�?by Yanagihara---------------
 % x_grid = 0:200:100000;
 % y_grid = -3500:200:3500;
 % [X,Y] = meshgrid(x_grid,y_grid);
@@ -70,7 +74,7 @@ track.lamp_nr_seg = 3;
 % sizeY = length(y_grid);
 %---------------------------------
 
-i = 0;
+
 % flagPlot = true;
 
 % RUN
@@ -169,21 +173,17 @@ while sim.flag && ishandle(fig)
             sim        = update_sim(sim);
             othercars  = respawn_othercars(othercars,track);
             
-            if FLAG_LANECHANGE ==2 % ギャップに入った
-                
-                % 車線変更の可否決定フラグを立ち上げる
-                if (mycar.pos(3) < -7 && FLAG_LANECHANGE_JUDGE == 0) || (FLAG_LANECHANGE_JUDGE == 3 && othercars.car{gap_front_nr}.pos(1) - mycar.pos(1) > 5000)
+            if FLAG_LANECHANGE ==2 % ギャ�??に入っ�?                
+                % 車線変更の可否決定フラグを立ち上げ�? judge start               
+                if (FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 3) && i_observe == 10
                     FLAG_LANECHANGE_JUDGE = 1;
+                    laneChangePathTranslated = update_laneChangePath(mycar,laneChangePath);
+                    i_observe = 0;
                 end
                 
-                % 後方車をやり過ごした後
-                if FLAG_LANECHANGE_JUDGE == 2 && mycar.pos(1) - othercars.car{gap_rear_nr}.pos(1) < 0
-                    FLAG_LANECHANGE_JUDGE = 3;
-                    gap_front_nr = gap_rear_nr;
-                    gap_rear_nr = gap_rear_nr - 1;
-                    if gap_rear_nr == 0
-                        gap_rear_nr = gap_rear_nr + othercars.npl;
-                    end
+                % 後方車を�?��過ごした�? observe start                
+                if FLAG_LANECHANGE_JUDGE == 5 && othercars.car{gap_front_nr}.pos(1) - mycar.pos(1) > 0
+                    
                     
                     i_list = i_list + 1;
                     
@@ -197,14 +197,19 @@ while sim.flag && ishandle(fig)
                         fprintf(1, 'REARCAR:YUZURANAI \n');
                     end
                     
-                elseif FLAG_LANECHANGE_STOP == 0
+                    FLAG_LANECHANGE_JUDGE = 3;
+                end
+                
+                % lane changing
+                if FLAG_LANECHANGE_JUDGE == 4
+                    % update mycar speed
                     mycar = update_control_mycar_intelligent(mycar, sim, othercars,laneChangePathTranslated,ratioSpeed, track, gap_front_nr);
                 end
                 
-                if (FLAG_LANECHANGE_JUDGE == 1 || FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 3) && FLAG_JUDGEMENT_TYPE == 1
+                if FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 3
                     A1 = othercars.car{gap_rear_nr}.vel(1)/v0;
                     
-                    % 前走車へIDMに従って追従した時の加速度を計算
+                    % 前走車へIDMに従って追従した時の�??度を計�?                    
                     A3 = othercars.car{gap_front_nr}.pos(1) - othercars.car{gap_rear_nr}.pos(1) - l;
                     A2 = (s0 + othercars.car{gap_rear_nr}.vel(1)*T + othercars.car{gap_rear_nr}.vel(1) * (othercars.car{gap_rear_nr}.vel(1) - othercars.car{gap_front_nr}.vel(1))/2/sqrt(a*b))/A3;
                     acc_frontcar = a*(1 - A1^delta - A2^2);
@@ -213,7 +218,7 @@ while sim.flag && ishandle(fig)
                     end
                     fprintf(1, 'estimated acceleration(follows frontcar) = [%.4d] A3 = [%4d] A2 = [%4d] \n', acc_frontcar, A3, A2);
                     
-                    % 合流車へIDMに従って追従した時の加速度を計算
+                    % 合流車へIDMに従って追従した時の�??度を計�?                    
                     A3 = mycar.pos(1) - othercars.car{gap_rear_nr}.pos(1) - l;
                     A2 = (s0 + othercars.car{gap_rear_nr}.vel(1)*T + othercars.car{gap_rear_nr}.vel(1) * (othercars.car{gap_rear_nr}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
                     acc_mycar = a*(1 - A1^delta - A2^2);
@@ -223,9 +228,11 @@ while sim.flag && ishandle(fig)
                     fprintf(1, 'estimated acceleration(follows mycar) = [%.4d] A3 = [%4d] A2 = [%4d] \n', acc_mycar, A3, A2);
                     
                     vel_rear_st = othercars.car{gap_rear_nr}.vel(1);
+                    
+                    i_observe = i_observe + 1;
                 end
                 
-                % 他車の速度更新
+                % update othercars speed
                 if FLAG_REARCAR_YUZURU == 1
                     [othercars, dec] = update_othercars_mycar_intelligent_merge(othercars, sim, track, mycar, gap_rear_nr);
                 else
@@ -233,77 +240,90 @@ while sim.flag && ishandle(fig)
                     %othercars.car{gap_rear_nr}.vel(1) = othercars.car{gap_rear_nr}.vel(1) + acc_rear;
                 end
                 
-                if FLAG_JUDGEMENT_TYPE == 1 && (FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 3)
+                if FLAG_LANECHANGE_JUDGE == 2
+                    if i_nego < gui_ego
+                        if sqrt((mycar.pos(1) - othercars.car{gap_rear_nr}.pos(1))^2 + (mycar.pos(2) - othercars.car{gap_rear_nr}.pos(2))^2) < gui_rear{i_list}
+                            FLAG_LANECHANGE_JUDGE = 4;
+                            FLAG_REARCAR_YUZURU = 1;
+                        end
+                        i_nego = i_nego + sim.T;
+                        mycar = update_control_mycar_intelligent(mycar, sim, othercars,laneChangePathTranslated,ratioSpeed, track, gap_front_nr);
+                        if mycar.vel(1) < 3000
+                            mycar.vel(1) = 3000;
+                        end
+                        fprintf(1, 'time_nego = [%4d] distance = [%4d] mycar.vel(1) = [%4d] \n', i_nego, sqrt((mycar.pos(1) - othercars.car{gap_rear_nr}.pos(1))^2 + (mycar.pos(2) - othercars.car{gap_rear_nr}.pos(2))^2), mycar.vel(1));
+                    else
+                        FLAG_LANECHANGE_JUDGE = 5;
+                        % 現車線に戻る�?ジエ曲線を作�?
+                        dx = 2000; % x-cood.interval of control points for bezier curve
+                        dy = LANE_WIDTH/2 - mycar.pos(2);
+                        ctlPt = [0 0; dx 0; 2*dx dy; 3*dx dy];
+                        [laneChangePath_r, lengthP_r] = bezierCurve(ctlPt);
+                        ratioSpeed_r = lengthP_r/15000*1.1;
+                        laneChangePathTranslated_r = update_laneChangePath(mycar,laneChangePath_r);
+                        %plot_laneChangePath(laneChangePathTranslated,FLAG_LANECHANGE);
+                        
+                        gap_front_nr = gap_rear_nr;
+                        gap_rear_nr = gap_rear_nr - 1;
+                        if gap_rear_nr == 0
+                            gap_rear_nr = gap_rear_nr + othercars.npl;
+                        end
+                    end
+                end
                     
-                    i = i + 1;
-                    vel_rear_en = othercars.car{gap_rear_nr}.vel(1); % 加速度算出のための速度計測
+                
+                if FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 1 || FLAG_LANECHANGE_JUDGE == 3
+                    
+                    [mycar, dec_me] = update_mycar_intelligent(mycar, sim, othercars, track, gap_front_nr);
+                    
+                    vel_rear_en = othercars.car{gap_rear_nr}.vel(1); % �??度算�?のための速度計測
                     if abs((vel_rear_en - vel_rear_st)/sim.T - acc_frontcar) < abs((vel_rear_en - vel_rear_st)/sim.T - acc_mycar)
                         fprintf(2, 'following FRONTCAR\n');
                     else
                         fprintf(2, 'following MYCAR\n');
                     end
                     fprintf(1, 'acceleration(actual) = [%.4d]\n', (vel_rear_en - vel_rear_st)/sim.T);
-                    fprintf(2, '[%d]\n', i);
+                    fprintf(1, 'mycar.vel(1) = [%.4d]\n', mycar.vel(1));
+                    fprintf(2, '[%d]\n', i_observe);
                 end
                 
-                % 現車線に復帰
+                % 現車線に復帰 return current lane
                 if FLAG_LANECHANGE_JUDGE == 5
-                    % 現車線に戻るベジエ曲線を作成
-                    dx = 2000; % x-cood.interval of control points for bezier curve
-                    dy = LANE_WIDTH/2 - mycar.pos(2);
-                    ctlPt = [0 0; dx 0; 2*dx dy; 3*dx dy];
-                    [laneChangePath, lengthP] = bezierCurve(ctlPt);
-                    ratioSpeed = lengthP/15000*1.1;
-                    laneChangePathTranslated = update_laneChangePath(mycar,laneChangePath);
-                    mycar = update_control_mycar(mycar, sim, othercars,laneChangePathTranslated,ratioSpeed);
+                    
+                    % update mycar speed
+                    mycar.vel(1) = mycar.vel(1) - 1000;
+                    mycar = update_control_mycar(mycar, sim, othercars,laneChangePathTranslated_r,ratioSpeed_r);
+                    if mycar.vel(1) < 3000
+                        mycar.vel(1) = 3000;
+                    end
+                    
                 end
                 
-                % 車線変更の可否決定
+                
+                
+                % 車線変更の可否決�?                
                 if FLAG_LANECHANGE_JUDGE == 1
                     FLAG_LANECHANGE_JUDGE = 4;
-                    FLAG_LANECHANGE_STOP = 0;
                     
-                    if FLAG_JUDGEMENT_TYPE == 0 % TTCによる車線変更決定
-                        mycar_est = mycar;
-                        othercars_est = othercars;
-                        while mycar_est.pos(2) > 50
-                            %TTCを計算
-                            [mycar_est, U_r, U_f]  = update_control_mycar_intelligent_est(mycar_est, sim, othercars_est,laneChangePathTranslated,ratioSpeed, gap_rear_nr, gap_front_nr);
-                            %mycar_est  = update_control_mycar_est(mycar_est, sim, othercars_est,laneChangePathTranslated,ratioSpeed);
-                            othercars_est = update_othercar_est(othercars_est, sim, gap_rear_nr);
-                            othercars_est = update_othercar_est(othercars_est, sim, gap_front_nr);
-                            %                         fprintf(1, 'Mycar_pos = [%d] \n', mycar_est.pos(1));
-                            %                         fprintf(1, 'Rearcar_pos = [%d] \n', othercars_est.car{gap_rear_nr}.pos(1));
-                            
-                            if mycar_est.pos(2) < 2000 && mycar_est.pos(1) - othercars_est.car{gap_rear_nr}.pos(1) < 4000
-                                FLAG_LANECHANGE_JUDGE = 2;
-                                FLAG_LANECHANGE_STOP = 1;
-                                break;
-                            end
-                        end
-                        fprintf(1, 'DISTANCE = [%d] \n', mycar_est.pos(1) - othercars_est.car{gap_rear_nr}.pos(1));
-                    elseif FLAG_JUDGEMENT_TYPE == 1  % 観測加速度のIDM評価による車線変更決定
-                        
-                        vel_rear_en = othercars.car{gap_rear_nr}.vel(1); % 加速度算出のための速度計測
-                        if abs((vel_rear_en - vel_rear_st)/sim.T - acc_frontcar) < abs((vel_rear_en - vel_rear_st)/sim.T - acc_mycar)
-                            FLAG_LANECHANGE_JUDGE = 5;
-                            FLAG_LANECHANGE_STOP = 1;
-                        end
-                        fprintf(1, 'acceleration(actual) = [%.4d]\n', (vel_rear_en - vel_rear_st)/sim.T);
+                    vel_rear_en = othercars.car{gap_rear_nr}.vel(1); % �??度算�?のための速度計測
+                    if abs((vel_rear_en - vel_rear_st)/sim.T - acc_frontcar) < abs((vel_rear_en - vel_rear_st)/sim.T - acc_mycar)
+                        FLAG_LANECHANGE_JUDGE = 2;
+                        i_nego = 0;
                     end
+                    fprintf(1, 'acceleration(actual) = [%.4d]\n', (vel_rear_en - vel_rear_st)/sim.T);
                 end
                 
+            elseif FLAG_LANECHANGE ==1 % 車線変更が�?力された
                 
-            elseif FLAG_LANECHANGE ==1 % 車線変更が入力された
-                
-                % 指定ギャップに入ったら車線変更開始
-                if mycar.pos(1) < othercars.car{gap_front_nr}.pos(1) - 1000 && mycar.pos(1) > othercars.car{gap_rear_nr}.pos(1) + 2000
+                % �?��ギャ�??に入ったら車線変更開�?                
+                if mycar.pos(1) < othercars.car{gap_front_nr}.pos(1) && mycar.pos(1) - 1000 > othercars.car{gap_rear_nr}.pos(1) + 2000
                     FLAG_LANECHANGE = 2;
                     % turn Signal
                     mycar.turnSignal = 'right';
+                    i_observe = 0;
                 end
                 
-                % 指定ギャップよりも前にいたら減速
+                % �?��ギャ�??よりも前に�?��ら減�?
                 if mycar.pos(1) > othercars.car{gap_front_nr}.pos(1) - 1000
                     mycar.vel(1) = mycar.vel(1) - dec_mycar;
                     if mycar.vel(1) < 0
@@ -352,7 +372,7 @@ while sim.flag && ishandle(fig)
     
     clk_plot = clock;
     FILL_LANES           = 1; % 1
-    SIMPLECARSHAPE       = 1; % 0(描画処理が重い場合は SIMPLECARSHAPE=1, REALCARSHAPE=0とする)
+    SIMPLECARSHAPE       = 1; % 0(描画処�?��重い場合�? SIMPLECARSHAPE=1, REALCARSHAPE=0とする)
     REALCARSHAPE         = 0; % 1
     PLOT_FUTURE_CARPOSES = 1; % 1
     PLOT_CAR_PATHS       = 1; % 1
@@ -381,7 +401,7 @@ while sim.flag && ishandle(fig)
         plot_laneChangePath(laneChangePathTranslated,FLAG_LANECHANGE); % add by kumano
     end
     %----
-    %plot_title(titlestr, titlecol, titlefontsize);
+    plot_title(titlestr, titlecol, titlefontsize);
     
     %---ポテンシャル場描画 by Yanagihara----------
     %     itvl= 0:2000:50000;
