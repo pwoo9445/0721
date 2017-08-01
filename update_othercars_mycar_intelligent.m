@@ -1,13 +1,13 @@
-function [othercars, dec] = update_othercars_mycar_intelligent(othercars, sim, track, mycar, car_nr) % added by yanagihara
+function [othercars, dec] = update_othercars_mycar_intelligent(othercars, sim, track, mycar, car_nr, idm) % added by yanagihara
 
 % PARAMETER OF INTELLIGENT DRIVING MODEL---------------------
-v0 = 10000; % desired velocity
-T = 1.0; % Safe time headway
-a = 4000; % maximum acceleration
-b = 6000; %desired deceleration
-delta = 4; %acceleration exponent
-s0 = 1000; % minimum distance
-l = 2500; % vehicle length
+v0 = idm.v0; % desired velocity
+T = idm.T; % Safe time headway
+a = idm.a; % maximum acceleration
+b = idm.b; %desired deceleration
+delta = idm.delta; %acceleration exponent
+s0 = idm.s0; % minimum distance
+l = idm.l; % vehicle length
 %============================================================
 
 for i = 1:othercars.n
