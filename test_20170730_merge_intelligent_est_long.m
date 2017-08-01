@@ -27,8 +27,9 @@ T = 1.0; % Safe time headway
 a = 4000; % maximum acceleration
 b = 6000; %desired deceleration
 delta = 4; %acceleration exponent
-s0 = 5000; % minimum distance
-l = 5000; % vehicle length
+s0 = 1000; % minimum distance
+l = 2500; % vehicle length
+%============================================================
 
 
 % INITIALIZE ENVIRONMENT
@@ -61,11 +62,12 @@ ratioSpeed = lengthP/15000*1.1;
 track.lamp_nr_seg = 3;
 
 % GUIGUI LEVEL SETTING
-gui_ego = 1.0; % time length of lanechanging
+%gui_ego = 1.0; % time length of lanechanging
+gui_
 gui_rear = {3000, 3000, 3000, 10000, 3000, 3000, 3000, 3000, 3000}; % acceptable distance of rearcar
 
 
-%--- グリ�?��の設�?by Yanagihara---------------
+%--- grid setting by Yanagihara---------------
 % x_grid = 0:200:100000;
 % y_grid = -3500:200:3500;
 % [X,Y] = meshgrid(x_grid,y_grid);
@@ -173,15 +175,15 @@ while sim.flag && ishandle(fig)
             sim        = update_sim(sim);
             othercars  = respawn_othercars(othercars,track);
             
-            if FLAG_LANECHANGE ==2 % ギャ�??に入っ�?                
-                % 車線変更の可否決定フラグを立ち上げ�? judge start               
+            if FLAG_LANECHANGE ==2 % entered between gap                
+                % judge start               
                 if (FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 3) && i_observe == 10
                     FLAG_LANECHANGE_JUDGE = 1;
                     laneChangePathTranslated = update_laneChangePath(mycar,laneChangePath);
                     i_observe = 0;
                 end
                 
-                % 後方車を�?��過ごした�? observe start                
+                % observe start                
                 if FLAG_LANECHANGE_JUDGE == 5 && othercars.car{gap_front_nr}.pos(1) - mycar.pos(1) > 0
                     
                     
@@ -209,7 +211,7 @@ while sim.flag && ishandle(fig)
                 if FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 3
                     A1 = othercars.car{gap_rear_nr}.vel(1)/v0;
                     
-                    % 前走車へIDMに従って追従した時の�??度を計�?                    
+                    % calculate acceleration by IDM (follows FRONTCAR)                    
                     A3 = othercars.car{gap_front_nr}.pos(1) - othercars.car{gap_rear_nr}.pos(1) - l;
                     A2 = (s0 + othercars.car{gap_rear_nr}.vel(1)*T + othercars.car{gap_rear_nr}.vel(1) * (othercars.car{gap_rear_nr}.vel(1) - othercars.car{gap_front_nr}.vel(1))/2/sqrt(a*b))/A3;
                     acc_frontcar = a*(1 - A1^delta - A2^2);
@@ -218,7 +220,7 @@ while sim.flag && ishandle(fig)
                     end
                     fprintf(1, 'estimated acceleration(follows frontcar) = [%.4d] A3 = [%4d] A2 = [%4d] \n', acc_frontcar, A3, A2);
                     
-                    % 合流車へIDMに従って追従した時の�??度を計�?                    
+                    % calculate acceleration by IDM (follows EGOCAR)                    
                     A3 = mycar.pos(1) - othercars.car{gap_rear_nr}.pos(1) - l;
                     A2 = (s0 + othercars.car{gap_rear_nr}.vel(1)*T + othercars.car{gap_rear_nr}.vel(1) * (othercars.car{gap_rear_nr}.vel(1) - mycar.vel(1))/2/sqrt(a*b))/A3;
                     acc_mycar = a*(1 - A1^delta - A2^2);
@@ -254,7 +256,7 @@ while sim.flag && ishandle(fig)
                         fprintf(1, 'time_nego = [%4d] distance = [%4d] mycar.vel(1) = [%4d] \n', i_nego, sqrt((mycar.pos(1) - othercars.car{gap_rear_nr}.pos(1))^2 + (mycar.pos(2) - othercars.car{gap_rear_nr}.pos(2))^2), mycar.vel(1));
                     else
                         FLAG_LANECHANGE_JUDGE = 5;
-                        % 現車線に戻る�?ジエ曲線を作�?
+                        % make bezier curve when returns current lane
                         dx = 2000; % x-cood.interval of control points for bezier curve
                         dy = LANE_WIDTH/2 - mycar.pos(2);
                         ctlPt = [0 0; dx 0; 2*dx dy; 3*dx dy];
@@ -276,7 +278,8 @@ while sim.flag && ishandle(fig)
                     
                     [mycar, dec_me] = update_mycar_intelligent(mycar, sim, othercars, track, gap_front_nr);
                     
-                    vel_rear_en = othercars.car{gap_rear_nr}.vel(1); % �??度算�?のための速度計測
+                    % observe acceleration for comparison
+                    vel_rear_en = othercars.car{gap_rear_nr}.vel(1);
                     if abs((vel_rear_en - vel_rear_st)/sim.T - acc_frontcar) < abs((vel_rear_en - vel_rear_st)/sim.T - acc_mycar)
                         fprintf(2, 'following FRONTCAR\n');
                     else
@@ -287,7 +290,7 @@ while sim.flag && ishandle(fig)
                     fprintf(2, '[%d]\n', i_observe);
                 end
                 
-                % 現車線に復帰 return current lane
+                % return current lane
                 if FLAG_LANECHANGE_JUDGE == 5
                     
                     % update mycar speed
@@ -301,11 +304,11 @@ while sim.flag && ishandle(fig)
                 
                 
                 
-                % 車線変更の可否決�?                
+                % decide whether change lane or not (1st step)                
                 if FLAG_LANECHANGE_JUDGE == 1
                     FLAG_LANECHANGE_JUDGE = 4;
                     
-                    vel_rear_en = othercars.car{gap_rear_nr}.vel(1); % �??度算�?のための速度計測
+                    vel_rear_en = othercars.car{gap_rear_nr}.vel(1);
                     if abs((vel_rear_en - vel_rear_st)/sim.T - acc_frontcar) < abs((vel_rear_en - vel_rear_st)/sim.T - acc_mycar)
                         FLAG_LANECHANGE_JUDGE = 2;
                         i_nego = 0;
@@ -313,9 +316,9 @@ while sim.flag && ishandle(fig)
                     fprintf(1, 'acceleration(actual) = [%.4d]\n', (vel_rear_en - vel_rear_st)/sim.T);
                 end
                 
-            elseif FLAG_LANECHANGE ==1 % 車線変更が�?力された
+            elseif FLAG_LANECHANGE ==1 % imput lane changing
                 
-                % �?��ギャ�??に入ったら車線変更開�?                
+                % turn on blinker when egocar enters the gap                
                 if mycar.pos(1) < othercars.car{gap_front_nr}.pos(1) && mycar.pos(1) - 1000 > othercars.car{gap_rear_nr}.pos(1) + 2000
                     FLAG_LANECHANGE = 2;
                     % turn Signal
@@ -323,7 +326,7 @@ while sim.flag && ishandle(fig)
                     i_observe = 0;
                 end
                 
-                % �?��ギャ�??よりも前に�?��ら減�?
+                % decelerate if egocar exists in front of the gap
                 if mycar.pos(1) > othercars.car{gap_front_nr}.pos(1) - 1000
                     mycar.vel(1) = mycar.vel(1) - dec_mycar;
                     if mycar.vel(1) < 0
@@ -337,7 +340,7 @@ while sim.flag && ishandle(fig)
                 othercars  = update_othercars_intelligent_merge(othercars, sim, track); %added by yanagihara
                 laneChangePathTranslated = update_laneChangePath(mycar,laneChangePath);
                 
-            else % 車線変更入力前
+            else % before lanechanging is input
                 mycar    = update_mycar(mycar, sim, othercars);
                 othercars  = update_othercars_intelligent_merge(othercars, sim, track); %added by yanagihara
             end
@@ -372,7 +375,7 @@ while sim.flag && ishandle(fig)
     
     clk_plot = clock;
     FILL_LANES           = 1; % 1
-    SIMPLECARSHAPE       = 1; % 0(描画処�?��重い場合�? SIMPLECARSHAPE=1, REALCARSHAPE=0とする)
+    SIMPLECARSHAPE       = 1; % 0
     REALCARSHAPE         = 0; % 1
     PLOT_FUTURE_CARPOSES = 1; % 1
     PLOT_CAR_PATHS       = 1; % 1
@@ -403,7 +406,7 @@ while sim.flag && ishandle(fig)
     %----
     % plot_title(titlestr, titlecol, titlefontsize);
     
-    %---ポテンシャル場描画 by Yanagihara----------
+    %---plot potential field by Yanagihara----------
     %     itvl= 0:2000:50000;
     %     if flagPlot
     %        flagPlot = false;

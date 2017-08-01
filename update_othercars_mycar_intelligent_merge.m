@@ -6,9 +6,10 @@ T = 1.0; % Safe time headway
 a = 4000; % maximum acceleration
 b = 6000; %desired deceleration
 delta = 4; %acceleration exponent
-s0 = 5000; % minimum distance
+s0 = 1000; % minimum distance
 l = 2500; % vehicle length
 %============================================================
+
 
 for i = 1:othercars.n
     
