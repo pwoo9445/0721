@@ -65,7 +65,7 @@ if fist_flag
 else
     % OTHER CARS
     % for i = 1:othercars.n 
-    for i = 1:othercars.MAX_NRCAR
+    for i = 1:othercars.npl
         if SIMPLECARSHAPE
             h.carsfill{i}.Vertices = othercars.car{i}.bd;
             if i == gap_front_nr || i == gap_rear_nr
@@ -74,6 +74,11 @@ else
             else
                 %h.carsfill{i}.FaceColor = [0.9 0.2 0.6];
                 h.carsbd{i}.Color = 'k';
+            end
+            if selfishlist{i} == 1
+                h.carsfill{i}.FaceColor = [0.2 0.2 0.9]; % blue
+            else
+                h.carsfill{i}.FaceColor = [0.9 0.2 0.6]; % pink
             end
             h.carsbd{i}.XData = othercars.car{i}.bd(:, 1);
             h.carsbd{i}.YData = othercars.car{i}.bd(:, 2);
