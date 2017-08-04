@@ -5,7 +5,6 @@ ccc;
 %========== Simulator Settings ================================
 % MERGING SETTING
 selfishmode = 1; % 0:random 1:manual(list)
-i_list = 1;
 selfishlist = {0, 1, 0, 0, 0, 1, 0, 0, 1}; % 0:yuzuranai 1:yuzuru
 selfishness = 0.7; % selfishness of othercar
 acc_rear = 100; % acceleration (if othercar is selfish)
@@ -53,7 +52,7 @@ ms_update = 0; ms_plot = 0;
 
 % LANE CHANGE SETTING
 FLAG_LANECHANGE = 0;
-dx = 15000/3; % x-cood.interval of control points for bezier curve
+dx = 24000/3; % x-cood.interval of control points for bezier curve
 ctlPt = [0 0; dx 0; 2*dx -LANE_WIDTH; 3*dx -LANE_WIDTH];
 [laneChangePath, lengthP] = bezierCurve(ctlPt);
 ratioSpeed = lengthP/15000*1.1;
@@ -64,7 +63,7 @@ track.lamp_nr_seg = 3;
 % GUIGUI LEVEL SETTING
 %gui_ego = 1.0; % time length of lanechanging
 gui_ego = 1000;
-gui_rear = {3000, 3000, 3000, 4500, 3000, 3000, 3000, 3000, 3000}; % acceptable distance of rearcar
+gui_rear = {3000, 3000, 3000, 4000, 3000, 3000, 3000, 3000, 3000}; % acceptable distance of rearcar
 
 
 %--- grid setting by Yanagihara---------------
@@ -110,7 +109,7 @@ while sim.flag && ishandle(fig)
             othercars.car{othercars.npl}.vel(1) = othercars.car{othercars.npl}.vel(1)+2000; % 10000 mm/s = 36 km/h
         case {'downarrow', 'slash'}
             othercars.car{othercars.npl}.vel(1) = othercars.car{othercars.npl}.vel(1)-2000; % 10000 mm/s = 36 km/h
-        case 'space'
+        case '0'
             mycar.vel = [0 0];
         case {'1', '2', '3', '4', '5', '6'}
             nr_lane = str2num(key_pressed);
@@ -134,9 +133,13 @@ while sim.flag && ishandle(fig)
             othercars  = init_othercars();
             othercars.npl    = 9;  % number of cars per lane
             othercars  = test_addcars_multilane(othercars, track, othercars.npl, NR_LANE, othercar_vel_ini);
+            selfishlist = {0, 1, 0, 0, 0, 1, 0, 0, 1}; % 0:yuzuranai 1:yuzuru
             mycar      = init_mycar(get_posintrack(track, 2, 0, 1, 0));
             FLAG_LANECHANGE = 0;
+            FLAG_LANECHANGE_JUDGE = 0;
             track.lamp_nr_seg = 3;
+            gap_front_nr = 2;
+            gap_rear_nr = 1;
         case 'w'
             % SAVE TO FILE
             savename = sprintf('data/raw_trajs/traj_%s.mat' ...
@@ -145,7 +148,7 @@ while sim.flag && ishandle(fig)
             fprintf(2, 'TRAJ SAVE TO [%s]. \n', savename);
             sim.mode = 'QUIT';
             
-        case 'l'
+        case 'space'
             % LANE CHANGING (add by kumano)
             FLAG_LANECHANGE = 1;
             FLAG_LANECHANGE_JUDGE = 0; % (0:not yet, 1:go to judge, 2:judge refused, 3:judge preparing, 4:judge cleared, 5:returning)
@@ -180,7 +183,7 @@ while sim.flag && ishandle(fig)
                 % judge start               
                 if (FLAG_LANECHANGE_JUDGE == 0 || FLAG_LANECHANGE_JUDGE == 3) && i_observe == 10
                     FLAG_LANECHANGE_JUDGE = 1;
-                    dx = 15000/3; % x-cood.interval of control points for bezier curve
+                    dx = 24000/3; % x-cood.interval of control points for bezier curve
                     ctlPt = [0 0; dx 0; 2*dx -LANE_WIDTH/2 - mycar.pos(2); 3*dx -LANE_WIDTH/2 - mycar.pos(2)];
                     [laneChangePath, lengthP] = bezierCurve(ctlPt);
                     ratioSpeed = lengthP/15000*1.1;
@@ -191,18 +194,9 @@ while sim.flag && ishandle(fig)
                 % observe start                
                 if FLAG_LANECHANGE_JUDGE == 5 && othercars.car{gap_front_nr}.pos(1) - mycar.pos(1) > 0
                     
-                    i_list = i_list + 1;
-                    
                     ransu = rand;
                     fprintf(1, 'RANSU = [%d] \n', ransu);
-                    if (selfishmode == 0 && ransu > selfishness) || (selfishmode == 1 && selfishlist{i_list})
-%                         FLAG_REARCAR_YUZURU = 1;
-%                         fprintf(1, 'REARCAR:YUZURU \n');
-                    else
-%                         FLAG_REARCAR_YUZURU = 0;
-%                         fprintf(1, 'REARCAR:YUZURANAI \n');
-                    end
-                    
+                    mycar.turnSignal = 'right';
                     FLAG_LANECHANGE_JUDGE = 3;
                 end
                 
@@ -241,7 +235,7 @@ while sim.flag && ishandle(fig)
                 % update othercars speed
                 if selfishlist{gap_rear_nr} == 1
                     [othercars, dec] = update_othercars_mycar_intelligent_merge(othercars, sim, track, mycar, gap_rear_nr, idm);
-                    fprintf(2, 'deceleration(rearcar) = [%.4d]\n', dec);
+                    %fprintf(2, 'deceleration(rearcar) = [%.4d]\n', dec);
                 else
                     othercars  = update_othercars_intelligent_merge(othercars, sim, track, idm);
                     %othercars.car{gap_rear_nr}.vel(1) = othercars.car{gap_rear_nr}.vel(1) + acc_rear;
@@ -275,6 +269,8 @@ while sim.flag && ishandle(fig)
                         if gap_rear_nr == 0
                             gap_rear_nr = gap_rear_nr + othercars.npl;
                         end
+                        
+                        mycar.turnSignal = '';
                     end
                 end
                     
@@ -324,7 +320,7 @@ while sim.flag && ishandle(fig)
             elseif FLAG_LANECHANGE ==1 % imput lane changing
                 
                 % turn on blinker when egocar enters the gap                
-                if mycar.pos(1) < othercars.car{gap_front_nr}.pos(1) && mycar.pos(1) - 1000 > othercars.car{gap_rear_nr}.pos(1) + 1000
+                if mycar.pos(1) < othercars.car{gap_front_nr}.pos(1) && mycar.pos(1) - 1000 > othercars.car{gap_rear_nr}.pos(1) + 2000
                     FLAG_LANECHANGE = 2;
                     % turn Signal
                     mycar.turnSignal = 'right';

@@ -10,6 +10,9 @@ s0 = idm.s0; % minimum distance
 l = idm.l; % vehicle length
 %============================================================
 
+
+s0 = 1000;
+
 % UPDATE MY CAR INFORMATION
 persistent first_flag
 if isempty(first_flag)

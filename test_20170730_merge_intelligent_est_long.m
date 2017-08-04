@@ -1,7 +1,9 @@
 ccc
 %% MANUALLY COLLECT DRIVING DEMONSTRATIONS
 ccc;
-
+addpath(genpath('./init'))
+addpath(genpath('./plot'))
+addpath(genpath('./update'))
 %========== Simulator Settings ================================
 % MERGING SETTING
 selfishmode = 1; % 0:random 1:manual(list)
